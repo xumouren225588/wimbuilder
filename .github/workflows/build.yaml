@@ -3,10 +3,6 @@ name: Build Windows install wim
 on:
   workflow_dispatch:
     inputs:
-      sku_name:
-        description: '目标SKU'
-        required: false
-        default: 'Professional'
       build_number:
         description: '构建版本号'
         required: true
@@ -29,21 +25,9 @@ jobs:
       - name: Download UUPs
         shell: pwsh
         env:
-          SKU_ENV: ${{ github.event.inputs.sku_name }}
           BUILD_NUMBER: ${{ github.event.inputs.build_number }}
         run: |
-          # 判断用户输入是否为空或仅包含空格
-          if ([string]::IsNullOrWhiteSpace($env:SKU_ENV)) {
-              $ENV_ARG = ""
-          } else {
-              $ENV_ARG = "-e $($env:SKU_ENV.Trim())"
-          }
-
-          Write-Host "使用的环境参数为: '$ENV_ARG'"
-
-          # 模拟调用你的 CLI 工具或脚本
-          # 当 $ENV_ARG 为空时，它不会传递 -e 参数
-          .\UUPDownload.exe -s Professional -r Retail -b Retail -c vb_release -l ${{ github.event.inputs.lang }} -v $env:BUILD_NUMBER -y $ENV_ARG -t amd64 -o .\dl
+          .\UUPDownload.exe -s Professional -r Retail -b Retail -c vb_release -l ${{ github.event.inputs.lang }} -v $env:BUILD_NUMBER -y -t amd64 -o .\dl
       - name: check and move
         shell: pwsh
         run: |
@@ -54,7 +38,7 @@ jobs:
         run: |
           cd converter
           dir UUPs
-          call convert-UUP.cmd
+          echo 0 | call convert-UUP.cmd
       - name: pack
         shell: cmd
         run: |
@@ -65,8 +49,8 @@ jobs:
         with:
           # 显式传递 Token（可以使用默认的 GITHUB_TOKEN，也可以是自定义 PAT）
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: "${{ github.event.inputs.build_number }}_${{ github.event.inputs.sku_name }}_${{ github.event.inputs.lang }}"
+          tag_name: "${{ github.event.inputs.build_number }}_${{ github.event.inputs.lang }}"
           # 显式指定 Release 的显示标题
-          name: "${{ github.event.inputs.build_number }}_${{ github.event.inputs.sku_name }}_${{ github.event.inputs.lang }}"
+          name: "${{ github.event.inputs.build_number }}_${{ github.event.inputs.lang }}"
           files: |
             .\install.wim.7*

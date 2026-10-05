@@ -10,7 +10,7 @@ set _Debug=0
 :: 2 - create ISO with install.esd
 :: 3 - create install.wim only
 :: 4 - create install.esd only
-set AutoStart=1
+set AutoStart=3
 
 :: Change to 1 to integrate updates (if detected) into install.wim/winre.wim
 :: Change to 2 to add updates externally to iso distribution
@@ -38,7 +38,7 @@ set wim2esd=0
 set wim2swm=0
 
 :: Change to 1 for not creating ISO file, result distribution folder will be kept
-set SkipISO=0
+set SkipISO=1
 
 :: Change to 1 for not adding winre.wim into install.wim/install.esd
 set SkipWinRE=0
@@ -394,30 +394,13 @@ if %AutoStart% equ 2 (set AIO=1&set WIMFILE=install.esd&goto :ISO)
 if %AutoStart% equ 3 (set AIO=1&set WIMFILE=install.wim&goto :Single)
 if %AutoStart% equ 4 (set AIO=1&set WIMFILE=install.esd&goto :Single)
 @cls
-set _index=
-echo.
-echo       UUP source contains multiple editions:
-echo %_ln2%
-echo.
-for /L %%# in (1,1,%uups_esd_num%) do (
-echo %%#. !_name%%#!
-)
-echo %_ln2%
-echo.
-echo Enter zero '0' to create AIO
-echo Enter individual edition number to create solely
-echo Enter multiple editions numbers to create, separated with spaces
-echo %_ln1%
-echo.
-set /p _index= ^> Enter your option and press "Enter": 
-if not defined _index set _Debug=1&goto :QUIT
-if "%_index%"=="0" (set "_tag= AIO"&set "_ta2=AIO"&set AIO=1&goto :MAINMENU)
-for %%# in (%_index%) do call :setindex %%#
-if %_count% equ 1 for /L %%# in (1,1,%uups_esd_num%) do (
-if %_index1% equ %%# set "MetadataESD=!_UUP!\!uups_esd%%#!"&set "_flg=!edition%%#!"&set "arch=!arch%%#!"&set "langid=!langid%%#!"&set "editionid=!edition%%#!"&set "_oName=!_oname%%#!"&set "_Srvr=!_ESDSrv%%#!"&goto :MAINMENU
-)
+
+set "_index=0"
+set "_tag= AIO"
 set "_ta2=AIO"
-goto :MAINMENU
+set "AIO=1"
+set "WIMFILE=install.wim"
+goto :Single
 
 :setindex
 set /a _count+=1
@@ -784,6 +767,7 @@ goto :QUIT
 
 :Single
 @cls
+set AddUpdates=1
 call :dk_color1 %Gray% "=== Running UUP Converter %uivr% ===" 4 5
 call :checkQE
 set _initial=1
